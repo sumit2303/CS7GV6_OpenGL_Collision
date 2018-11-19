@@ -1,0 +1,3 @@
+﻿  main.cpp
+c:\users\kumars3\source\cg_proj\cs7gv6_opengl_collision\main.cpp(92): warning C4244: 'initializing': conversion from 'double' to 'GLfloat', possible loss of data
+  cg_proj.vcxproj -> C:\Users\kumars3\source\cg_proj\CS7GV6_OpenGL_Collision\cg_proj\Debug\cg_proj.exe

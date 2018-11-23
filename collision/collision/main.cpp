@@ -41,6 +41,13 @@ DirectionalLight mainLight;
 GLfloat deltaTime = 0.0f;
 GLfloat lastTime = 0.0f;
 
+//For translation
+GLfloat curPositionX = 0.0f;
+GLfloat curPositionZ = 0.0f;
+GLfloat maxTranslate = 8.0f;
+GLfloat minTranslate = -8.0f;
+
+
 // Vertex Shader
 static const char* vShader = "Shaders/vShader.txt";
 
@@ -64,6 +71,49 @@ void CreatePlane()
 	Mesh *obj0 = new Mesh();
 	obj0->CreateMesh(floorVertices, floorIndices, 32, 6);
 	meshList.push_back(obj0);
+}
+
+void TranslateModels(bool* keys) {
+	if (keys[GLFW_KEY_RIGHT])
+	{
+		if (curPositionX <= maxTranslate) {
+			curPositionX += 0.050f;
+		}
+		else {
+			curPositionX = curPositionX;
+		}
+	}
+
+	if (keys[GLFW_KEY_LEFT])
+	{
+		if (curPositionX >= minTranslate) {
+			curPositionX -= 0.050f;
+		}
+		else {
+			curPositionX = curPositionX;
+		}
+	}
+
+	if (keys[GLFW_KEY_UP])
+	{
+		if (curPositionZ >= minTranslate) {
+			curPositionZ -= 0.050f;
+		}
+		else {
+			curPositionZ = curPositionZ;
+		}
+	}
+
+	if (keys[GLFW_KEY_DOWN])
+	{
+		if (curPositionZ <= maxTranslate) {
+			curPositionZ += 0.050f;
+		}
+		else {
+			curPositionZ = curPositionZ;
+		}
+	}
+
 }
 
 
@@ -116,6 +166,9 @@ int main()
 		// Get + Handle User Input
 		glfwPollEvents();
 
+		//Check for input transformations
+		TranslateModels(mainWindow.getsKeys());
+
 		// Clear the window
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -136,8 +189,8 @@ int main()
 
 		//Camera position above scene
 		orthoView = glm::lookAt(
-			glm::vec3(0.0, 8.0, -1.0), //camera position
-			glm::vec3(0.0, 0.0, -1.0), // target
+			glm::vec3(0.0, 75.0, 0.0), //camera position
+			glm::vec3(0.0, 0.0, 0.0), // target
 			glm::vec3(0.0, 0.0, -1.0)); //up vector
 		glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, glm::value_ptr(orthoProjection));
 		glUniformMatrix4fv(uniformView, 1, GL_FALSE, glm::value_ptr(orthoView));
@@ -151,7 +204,8 @@ int main()
 
 		//Ball
 		glm::mat4 ballModelMat(1.0f);
-		ballModelMat = glm::scale(ballModelMat, glm::vec3(0.065f, 0.065f, 0.065f));
+		ballModelMat = glm::translate(ballModelMat, glm::vec3(curPositionX, 1.0f, curPositionZ));
+		ballModelMat = glm::scale(ballModelMat, glm::vec3(0.1f, 0.1f, 0.1f));
 		glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(ballModelMat));
 		ball.RenderModel();
 

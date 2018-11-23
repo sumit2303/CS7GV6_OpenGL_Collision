@@ -1,0 +1,3 @@
+﻿  main.cpp
+c:\users\cjmcm\documents\visual studio\projects\computer graphics labs\group\collision\collision\main.cpp(114): warning C4244: 'initializing': conversion from 'double' to 'GLfloat', possible loss of data
+  collision.vcxproj -> C:\Users\cjmcm\Documents\Visual Studio\Projects\Computer Graphics Labs\group\collision\Debug\collision.exe

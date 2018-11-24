@@ -31,9 +31,12 @@ Window mainWindow;
 std::vector<Mesh*> meshList;
 std::vector<Shader> shaderList;
 
-Texture checkerTexture;
-Texture checkerTexture1;
+Texture greenTexture;
+Texture redTexture;
+Texture whiteTexture;
+Texture blueTexture;
 
+Model disk;
 Model ball;
 
 DirectionalLight mainLight;
@@ -44,8 +47,8 @@ GLfloat lastTime = 0.0f;
 //For translation
 GLfloat curPositionX = 0.0f;
 GLfloat curPositionZ = 0.0f;
-GLfloat maxTranslate = 8.0f;
-GLfloat minTranslate = -8.0f;
+GLfloat maxTranslate = 9.0f;
+GLfloat minTranslate = -9.0f;
 
 
 // Vertex Shader
@@ -55,21 +58,21 @@ static const char* vShader = "Shaders/vShader.txt";
 static const char* fShader = "Shaders/fShader.txt";
 
 //Create floor plane (other objects not used)
-void CreatePlane() 
+void CreatePlane()
 {
-	unsigned int floorIndices[] = {
+	unsigned int Indices[] = {
 		0, 2, 1,
 		1, 2, 3
 	};
 
-	GLfloat floorVertices[] = {
-		-10.0f, 0.0f, -10.0f,	0.0f, 0.0f,		0.0f, -1.0f, 0.0f,
-		10.0f, 0.0f, -10.0f,	10.0f, 0.0f,	0.0f, -1.0f, 0.0f,
-		-10.0f, 0.0f, 10.0f,	0.0f, 10.0f,	0.0f, -1.0f, 0.0f,
-		10.0f, 0.0f, 10.0f,		10.0f, 10.0f,	0.0f, -1.0f, 0.0f
+	GLfloat Vertices[] = {
+		-10.0f, 0.0f, -10.0f,	0.0f, 0.0f,			0.0f, -1.0f, 0.0f,
+		10.0f, 0.0f, -10.0f,	10.0f, 0.0f,		0.0f, -1.0f, 0.0f,
+		-10.0f, 0.0f, 10.0f,	0.0f, 10.0f,		0.0f, -1.0f, 0.0f,
+		10.0f, 0.0f, 10.0f,		10.0f, 10.0f,		0.0f, -1.0f, 0.0f
 	};
 	Mesh *obj0 = new Mesh();
-	obj0->CreateMesh(floorVertices, floorIndices, 32, 6);
+	obj0->CreateMesh(Vertices, Indices, 32, 6);
 	meshList.push_back(obj0);
 }
 
@@ -77,7 +80,7 @@ void TranslateModels(bool* keys) {
 	if (keys[GLFW_KEY_RIGHT])
 	{
 		if (curPositionX <= maxTranslate) {
-			curPositionX += 0.050f;
+			curPositionX += 0.1f;
 		}
 		else {
 			curPositionX = curPositionX;
@@ -87,7 +90,7 @@ void TranslateModels(bool* keys) {
 	if (keys[GLFW_KEY_LEFT])
 	{
 		if (curPositionX >= minTranslate) {
-			curPositionX -= 0.050f;
+			curPositionX -= 0.1f;
 		}
 		else {
 			curPositionX = curPositionX;
@@ -97,7 +100,7 @@ void TranslateModels(bool* keys) {
 	if (keys[GLFW_KEY_UP])
 	{
 		if (curPositionZ >= minTranslate) {
-			curPositionZ -= 0.050f;
+			curPositionZ -= 0.1f;
 		}
 		else {
 			curPositionZ = curPositionZ;
@@ -107,7 +110,7 @@ void TranslateModels(bool* keys) {
 	if (keys[GLFW_KEY_DOWN])
 	{
 		if (curPositionZ <= maxTranslate) {
-			curPositionZ += 0.050f;
+			curPositionZ += 0.1f;
 		}
 		else {
 			curPositionZ = curPositionZ;
@@ -116,6 +119,14 @@ void TranslateModels(bool* keys) {
 
 }
 
+bool toggleTex() {
+	if (curPositionX >= 0.0f) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
 
 void CreateShaders()
 {
@@ -124,33 +135,42 @@ void CreateShaders()
 	shaderList.push_back(*shader1);
 }
 
-int main() 
+int main()
 {
 	//Initialize window
-	mainWindow = Window(800, 600);
+	mainWindow = Window(800, 800);
 	mainWindow.Initialise();
 
 	CreatePlane();
 	CreateShaders();
 
 	//Load Textures
-	checkerTexture = Texture("Textures/checker.png");
-	checkerTexture.LoadTextureA();
+	greenTexture = Texture("Textures/green.png");
+	greenTexture.LoadTextureA();
+	redTexture = Texture("Textures/red.png");
+	redTexture.LoadTextureA();
+	whiteTexture = Texture("Textures/plain.png");
+	whiteTexture.LoadTextureA();
+	blueTexture = Texture("Textures/blue.png");
+	blueTexture.LoadTextureA();
+
 
 	//Import models from folder
+	disk = Model();
+	disk.LoadModel("Models/disk.obj");
 	ball = Model();
 	ball.LoadModel("Models/ball.obj");
 
-	mainLight = DirectionalLight(1.0f, 1.0f, 1.0f,  // Color
-								0.6f, 0.6f, //ambient intensity
-								0.0f, 0.0f, -1.0f); // Direction
+	mainLight = DirectionalLight(
+		1.0f, 1.0f, 1.0f,  // Color
+		0.6f, 0.6f, //ambient intensity
+		0.0f, 0.0f, -1.0f); // Direction
 
-	//Default initialize shader uniform variables
+//Default initialize shader uniform variables
 	GLuint uniformProjection = 0, uniformModel = 0, uniformView = 0, uniformEyePosition = 0,
 		uniformSpecularIntensity = 0, uniformShininess = 0;
 
 	//Perspective matrices
-	glm::mat4 projection = glm::perspective(45.0f, (GLfloat)mainWindow.getBufferWidth() / mainWindow.getBufferHeight(), 0.1f, 100.0f);
 	glm::mat4 orthoProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.0f, 100.0f);
 	glm::mat4 orthoView;
 
@@ -173,6 +193,7 @@ int main()
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
 		//Shader uniform variables
 		shaderList[0].UseShader();
 		uniformModel = shaderList[0].GetModelLocation();
@@ -189,7 +210,7 @@ int main()
 
 		//Camera position above scene
 		orthoView = glm::lookAt(
-			glm::vec3(0.0, 75.0, 0.0), //camera position
+			glm::vec3(0.0, 50.0, 0.0), //camera position
 			glm::vec3(0.0, 0.0, 0.0), // target
 			glm::vec3(0.0, 0.0, -1.0)); //up vector
 		glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, glm::value_ptr(orthoProjection));
@@ -199,18 +220,16 @@ int main()
 		//Floor plane
 		glm::mat4 floorModelMat(1.0f);
 		glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(floorModelMat));
-		checkerTexture.UseTexture();
+		greenTexture.UseTexture();
 		meshList[0]->RenderMesh();
-
+		
 		//Ball
 		glm::mat4 ballModelMat(1.0f);
 		ballModelMat = glm::translate(ballModelMat, glm::vec3(curPositionX, 1.0f, curPositionZ));
-		ballModelMat = glm::scale(ballModelMat, glm::vec3(0.1f, 0.1f, 0.1f));
 		glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(ballModelMat));
 		ball.RenderModel();
 
 		glUseProgram(0);
-
 		mainWindow.swapBuffers();
 	}
 

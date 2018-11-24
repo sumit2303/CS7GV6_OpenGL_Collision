@@ -190,7 +190,7 @@ void DoCollisions()
 
 void Update(GLfloat dt,GLuint uniformModel)
 {
-	ball1->Move(dt, Width);
+	ball2->Move(dt, Width);
 	//ball1->Draw(ball, uniformModel);
 	//ball2->Draw(ball, uniformModel);
 	// Check for collisions
@@ -220,7 +220,6 @@ int main()
 	whiteTexture.LoadTextureA();
 	blueTexture = Texture("Textures/blue.png");
 	blueTexture.LoadTextureA();
-
 
 	//Import models from folder
 	//disk = Model();
@@ -297,8 +296,8 @@ int main()
 		meshList[0]->RenderMesh();
 		
 		//update & check for collisions
-		Update(deltaTime, uniformModel);
 		//ball2->Position += ball2->Velocity;
+		Update(deltaTime, uniformModel);
 		ball1->Draw(ball, uniformModel);
 		ball2->Draw(ball, uniformModel);
 

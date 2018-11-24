@@ -41,10 +41,17 @@ glm::vec2 BallObject::Move(GLfloat dt, GLuint window_width)
 	return this->Position;
 }
 
-void BallObject::Draw(Model ball,GLuint uniformModel)
+// Without model matrix imported
+void BallObject::Draw(Model ball, GLuint uniformModel)
 {
 	glm::mat4 ballModelMat(1.0f);
 	ballModelMat = glm::translate(ballModelMat, glm::vec3(this->Position.x, 1.0f, this->Position.y));
 	glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(ballModelMat));
 	ball.RenderModel();
 }
+//With model matrix imported
+void BallObject::Draw(Model ball, GLuint uniformModel, glm::mat4 modelMat){
+	glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(modelMat));
+	ball.RenderModel();
+}
+

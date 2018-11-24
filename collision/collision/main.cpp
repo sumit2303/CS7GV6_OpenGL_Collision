@@ -34,7 +34,7 @@ GLuint Width = 800;
 GLuint Height = 800;
 
 std::vector<Shader> shaderList;
-std::vector<Model> modelList;
+std::vector<BallObject*> ballList;
 std::vector <glm::mat4> modelMatrices;
 
 Texture greenTexture;
@@ -281,7 +281,7 @@ int main()
 		shaderList[0].SetDirectionalLight(&mainLight);
 
 		// Create Viewport
-		
+
 		glViewport(0, 0, mainWindow.getBufferWidth(), mainWindow.getBufferHeight());
 
 		//Camera position above scene
@@ -291,7 +291,7 @@ int main()
 			glm::vec3(0.0, 0.0, -1.0)); //up vector
 		glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, glm::value_ptr(orthoProjection));
 		glUniformMatrix4fv(uniformView, 1, GL_FALSE, glm::value_ptr(orthoView));
-		
+
 		// Handle mouse clicks, need to convert points from screen space to world space
 		float aspect = 800.0f / Height;
 		glm::vec4 viewPort = glm::vec4(0.0f, 0.0f, 800.0f, 800.0f);
@@ -305,7 +305,7 @@ int main()
 		// OpenGL and Windows have different points for 0,0, so multiple Z (y-axis in this case) by -1 to correct it
 		modelPoint1.y = 1.0f;
 		modelPoint1.z *= -1.0f;
-		
+
 
 		//Floor plane
 		glm::mat4 floorModelMat(1.0f);
@@ -314,25 +314,29 @@ int main()
 		floorMesh.RenderMesh();
 
 		//Ball - spawn
-		/*if (mainWindow.mousePressed) {
-			std::cout << "mouse pressed" << std::endl;
+		if (mainWindow.mousePressed) {
 			std::cout << "[WORLD COORDS]mouse at: " << modelPoint1.x << ", " << modelPoint1.y << ", " << modelPoint1.z << ", " << std::endl;
+			BallObject* addBall = new BallObject();
+			ballList.push_back(addBall);
+			glm::mat4 newModelMat(1.0f);
+			newModelMat = glm::translate(newModelMat, glm::vec3(modelPoint1.x, modelPoint1.y, modelPoint1.z));
+			modelMatrices.push_back(newModelMat);
 			// Need to turn off mouse pressed here because by the time it comes back to here on the next loop...
 			// ...it will have logged 3 clicks
-
-
-
 			mainWindow.mousePressed = !mainWindow.mousePressed;
 		}
 		//for ball in vector of ball objects
 		//Render with nested for loop calling the model matrix for that object
 		//}*/
-
+		glm::mat4 newModelMat(1.0f);
+		for (int i = 0; i < ballList.size(); i++)
+			ballList[i]->Draw(ball, uniformModel, modelMatrices[i]);
+	
 		// update & check for collisions
 		//ball2->Position += ball2->Velocity;
 		Update(deltaTime, uniformModel);
-		ball1->Draw(ball, uniformModel);
-		ball2->Draw(ball, uniformModel);
+		//ball1->Draw(ball, uniformModel);
+		//ball2->Draw(ball, uniformModel);
 		
 		glUseProgram(0);
 		mainWindow.swapBuffers();

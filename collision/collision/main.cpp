@@ -24,10 +24,15 @@
 #include "DirectionalLight.h"
 
 #include "Model.h"
+#include "BallObject.h"
 
 const float toRadians = 3.14159265f / 180.0f;
+const GLfloat BALL_RADIUS = 1.0f;
 
 Window mainWindow;
+//window size
+GLuint Width = 800;
+GLuint Height = 800;
 std::vector<Mesh*> meshList;
 std::vector<Shader> shaderList;
 
@@ -36,8 +41,16 @@ Texture redTexture;
 Texture whiteTexture;
 Texture blueTexture;
 
-Model disk;
+//Model disk;
 Model ball;
+
+//ball object
+BallObject *ball1, *ball2; 
+GLboolean collisionTest;
+// Initial velocity of the Ball
+const glm::vec2 INITIAL_BALL_VELOCITY(100.0f, -350.0f);
+//initial ball position
+glm::vec2 ballPosition(0.0f, 0.0f);
 
 DirectionalLight mainLight;
 
@@ -79,42 +92,49 @@ void CreatePlane()
 void TranslateModels(bool* keys) {
 	if (keys[GLFW_KEY_RIGHT])
 	{
-		if (curPositionX <= maxTranslate) {
-			curPositionX += 0.1f;
+		if (ball1->Position.x <= maxTranslate) {
+			ball1->Position.x += 0.1f;
 		}
 		else {
-			curPositionX = curPositionX;
+			ball1->Position.x= ball1->Position.x;
 		}
 	}
 
 	if (keys[GLFW_KEY_LEFT])
 	{
-		if (curPositionX >= minTranslate) {
-			curPositionX -= 0.1f;
+		if (ball1->Position.x >= minTranslate) {
+			ball1->Position.x -= 0.1f;
 		}
 		else {
-			curPositionX = curPositionX;
+			ball1->Position.x = ball1->Position.x;
 		}
+		
 	}
 
 	if (keys[GLFW_KEY_UP])
 	{
-		if (curPositionZ >= minTranslate) {
-			curPositionZ -= 0.1f;
+		if (ball1->Position.y >= minTranslate) {
+			ball1->Position.y -= 0.1f;
 		}
 		else {
-			curPositionZ = curPositionZ;
+			ball1->Position.y = ball1->Position.y;
 		}
 	}
 
 	if (keys[GLFW_KEY_DOWN])
 	{
-		if (curPositionZ <= maxTranslate) {
-			curPositionZ += 0.1f;
+		if (ball1->Position.y <= maxTranslate) {
+			ball1->Position.y += 0.1f;
 		}
 		else {
-			curPositionZ = curPositionZ;
+			ball1->Position.y = ball1->Position.y;
 		}
+	}
+	if (keys[GLFW_KEY_SPACE])
+	{
+		/*curPositionX += INITIAL_BALL_VELOCITY[0];
+		curPositionZ += INITIAL_BALL_VELOCITY[1];*/
+		ball2->Velocity.x = 0.1f;
 	}
 
 }
@@ -135,10 +155,57 @@ void CreateShaders()
 	shaderList.push_back(*shader1);
 }
 
+GLboolean CheckCollisionAABB(BallObject &one, BallObject &two)
+{
+	// Get center point circle first
+	glm::vec2 center1(one.Position + one.Radius);
+	// Calculate AABB info (center, half-extents)
+	//glm::vec2 aabbHalfExtents(two.Size.x / 2, two.Size.y / 2);
+	//glm::vec2 aabbCenter(two.Position + aabbHalfExtents);
+	glm::vec2 center2(two.Position + two.Radius);
+	glm::vec2 difference = center1 - center2;
+
+	glm::vec2 clamped = glm::clamp(difference, -center2, center2);
+	// Add clamped value to AABB_center and we get the value of box closest to circle
+	glm::vec2 closest = center2 + clamped;
+	difference = closest - center1;
+	if (glm::length(difference) <= one.Radius)
+	{
+		//return std::make_tuple(GL_TRUE, VectorDirection(difference), difference);
+		two.Size *= 2;
+		//two.Position.x += 0.2f;
+	}
+	else
+		return false;
+
+	//return false;
+}
+
+void DoCollisions()
+{
+	//check for collisions
+	collisionTest = CheckCollisionAABB(*ball1, *ball2);
+}
+
+
+void Update(GLfloat dt,GLuint uniformModel)
+{
+	ball1->Move(dt, Width);
+	//ball1->Draw(ball, uniformModel);
+	//ball2->Draw(ball, uniformModel);
+	// Check for collisions
+	//DoCollisions();
+	//ball1->Position.x = 3.0f;
+	//ball1->Draw(ball, uniformModel);
+	//ball2->Draw(ball, uniformModel);
+	
+}
+
 int main()
 {
 	//Initialize window
-	mainWindow = Window(800, 800);
+	//mainWindow = Window(800, 800);
+	mainWindow = Window(Width, Height);
 	mainWindow.Initialise();
 
 	CreatePlane();
@@ -156,10 +223,15 @@ int main()
 
 
 	//Import models from folder
-	disk = Model();
-	disk.LoadModel("Models/disk.obj");
+	//disk = Model();
+	//disk.LoadModel("Models/disk.obj");
 	ball = Model();
 	ball.LoadModel("Models/ball.obj");
+	glm::vec2 ballPosition = glm::vec2(0.0f, 0.0f);
+	//ball1 = new BallObject(ballPosition, glm::vec2(1,1), glm::vec3(1,1,1));
+	ball1 = new BallObject();
+	ball2 = new BallObject();
+
 
 	mainLight = DirectionalLight(
 		1.0f, 1.0f, 1.0f,  // Color
@@ -188,6 +260,7 @@ int main()
 
 		//Check for input transformations
 		TranslateModels(mainWindow.getsKeys());
+		//ball1->Position.x += 2.0f;
 
 		// Clear the window
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -223,11 +296,18 @@ int main()
 		greenTexture.UseTexture();
 		meshList[0]->RenderMesh();
 		
+		//update & check for collisions
+		Update(deltaTime, uniformModel);
+		//ball2->Position += ball2->Velocity;
+		ball1->Draw(ball, uniformModel);
+		ball2->Draw(ball, uniformModel);
+
+
 		//Ball
-		glm::mat4 ballModelMat(1.0f);
+		/*glm::mat4 ballModelMat(1.0f);
 		ballModelMat = glm::translate(ballModelMat, glm::vec3(curPositionX, 1.0f, curPositionZ));
 		glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(ballModelMat));
-		ball.RenderModel();
+		ball.RenderModel();*/
 
 		glUseProgram(0);
 		mainWindow.swapBuffers();

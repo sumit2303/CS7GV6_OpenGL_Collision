@@ -20,7 +20,7 @@ BallObject::BallObject(glm::vec2 pos, glm::vec2 size, /*Texture2D sprite,*/ glm:
 glm::vec2 BallObject::Move(GLfloat dt, GLuint window_width)
 {
 		// Move the balll
-		/*this->Position += this->Velocity * dt;
+		this->Position += this->Velocity * dt;
 		if (this->Position.x <= 0)
 		{
 			this->Velocity.x = -this->Velocity.x;
@@ -35,7 +35,7 @@ glm::vec2 BallObject::Move(GLfloat dt, GLuint window_width)
 		{
 			this->Velocity.y = -this->Velocity.y;
 			this->Position.y = 0.0f;
-		}*/
+		}
 	this->Position += this->Velocity;
 	
 	return this->Position;

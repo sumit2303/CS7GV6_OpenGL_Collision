@@ -1,7 +1,7 @@
 #pragma once
 
-#include <GL/glew.h>
-#include <glm/glm.hpp>
+#include <GL\glew.h>
+#include <glm\glm.hpp>
 #include <glm\gtc\matrix_transform.hpp>
 #include <glm\gtc\type_ptr.hpp>
 #include "Model.h"
@@ -25,4 +25,4 @@ public:
 		glm::vec3 color = glm::vec3(1.0f), glm::vec2 velocity = glm::vec2(0.0f));
 	glm::vec2 Move(GLfloat dt, GLuint window_width);
 	void Draw(Model Ball, GLuint uniformModel);
-}; 
+};

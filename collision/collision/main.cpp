@@ -1,4 +1,4 @@
-// Code primarily drawn from following tutorial: https://www.udemy.com/share/1001iYAkYSdVZUQ3Q=/
+// Structure primarily drawn from following tutorial: https://www.udemy.com/share/1001iYAkYSdVZUQ3Q=/
 
 //esc to quit
 #define STB_IMAGE_IMPLEMENTATION
@@ -6,13 +6,12 @@
 #include <stdio.h>
 #include <stdlib.h> //abs
 
-#include <iostream>
-#include <tuple>
-#include <functional>
-
 #include <string.h>
 #include <cmath>
 #include <vector>
+#include <iostream>
+#include <tuple>
+#include <functional>
 
 #include <GL\glew.h>
 #include <GLFW\glfw3.h>
@@ -28,9 +27,8 @@
 #include "Shader.h"
 #include "Texture.h"
 #include "DirectionalLight.h"
-
-#include "Model.h"
 #include "BallObject.h"
+#include "Model.h"
 
 enum Direction {
 	UP,
@@ -47,36 +45,36 @@ Window mainWindow;
 //window size
 GLuint Width = 800;
 GLuint Height = 800;
-std::vector<Mesh*> meshList;
+
 std::vector<Shader> shaderList;
+std::vector<BallObject*> ballList;
+std::vector <glm::mat4> modelMatrices;
 
 Texture greenTexture;
 Texture redTexture;
 Texture whiteTexture;
 Texture blueTexture;
 
-//Model disk;
 Model ball;
-
-//ball object
-BallObject *ball1, *ball2; 
-GLboolean collisionTest;
-// Initial velocity of the Ball
-const glm::vec2 INITIAL_BALL_VELOCITY(100.0f, -350.0f);
-//initial ball position
-glm::vec2 ballPosition(0.0f, 0.0f);
 
 DirectionalLight mainLight;
 
 GLfloat deltaTime = 0.0f;
 GLfloat lastTime = 0.0f;
 
+GLboolean collisionTest;
+
+// Initial velocity of the Ball
+const glm::vec2 INITIAL_BALL_VELOCITY(100.0f, -350.0f);
+
+//initial ball position
+glm::vec2 ballPosition(0.0f, 0.0f);
+
 //For translation
 GLfloat curPositionX = 0.0f;
 GLfloat curPositionZ = 0.0f;
 GLfloat maxTranslate = 9.0f;
 GLfloat minTranslate = -9.0f;
-
 
 // Vertex Shader
 static const char* vShader = "Shaders/vShader.txt";
@@ -85,7 +83,7 @@ static const char* vShader = "Shaders/vShader.txt";
 static const char* fShader = "Shaders/fShader.txt";
 
 //Create floor plane (other objects not used)
-void CreatePlane()
+Mesh CreatePlane()
 {
 	unsigned int Indices[] = {
 		0, 2, 1,
@@ -98,63 +96,29 @@ void CreatePlane()
 		-10.0f, 0.0f, 10.0f,	0.0f, 10.0f,		0.0f, -1.0f, 0.0f,
 		10.0f, 0.0f, 10.0f,		10.0f, 10.0f,		0.0f, -1.0f, 0.0f
 	};
-	Mesh *obj0 = new Mesh();
-	obj0->CreateMesh(Vertices, Indices, 32, 6);
-	meshList.push_back(obj0);
+	Mesh *floor = new Mesh();
+	floor->CreateMesh(Vertices, Indices, 32, 6);
+	return *floor;
 }
+
 
 void TranslateModels(bool* keys) {
-	if (keys[GLFW_KEY_RIGHT])
-	{
-		if (ball1->Position.x <= maxTranslate) {
-			ball1->Position.x += 0.1f;
-		}
-		else {
-			ball1->Position.x= ball1->Position.x;
-		}
-	}
-
-	if (keys[GLFW_KEY_LEFT])
-	{
-		if (ball1->Position.x >= minTranslate) {
-			ball1->Position.x =(ball1->Position.x* ball1->Velocity.x)+0.1f;
-			//ball1->Position.x -= ball1->Velocity.x+0.1f;
-		}
-		else {
-			//ball1->Position.x = ball1->Position.x;
-			ball1->Position.x += 0.1f;
-		}
-		
-	}
-
-	if (keys[GLFW_KEY_UP])
-	{
-		if (ball1->Position.y >= minTranslate) {
-			ball1->Position.y -= 0.1f;
-		}
-		else {
-			ball1->Position.y = ball1->Position.y;
-		}
-	}
-
-	if (keys[GLFW_KEY_DOWN])
-	{
-		if (ball1->Position.y <= maxTranslate) {
-			ball1->Position.y += 0.1f;
-		}
-		else {
-			ball1->Position.y = ball1->Position.y;
-		}
-	}
 	if (keys[GLFW_KEY_SPACE])
+
 	{
-		ball2->Velocity.x = 0.1f;
-		ball2->Velocity.y = 0.1f;
-		//ball1->Velocity.x = -0.1f;
+		if (!ballList.empty()) {
+			ballList[0]->Velocity.x = 10.0f * deltaTime;
+			ballList[0]->Velocity.y = 10.0f * deltaTime;
+			/*for (int i = 0; i < ballList.size(); i++) {
+				ballList[i]->Velocity.x = 10.0f * deltaTime;
+				ballList[i]->Velocity.y = 10.0f * deltaTime;
+			}*/
+		}
 	}
 
 }
 
+// Can delete maybe
 bool toggleTex() {
 	if (curPositionX >= 0.0f) {
 		return true;
@@ -184,6 +148,7 @@ Direction VectorDirection(glm::vec2 target)
 	for (GLuint i = 0; i < 4; i++)
 	{
 		GLfloat dot_product = glm::dot(glm::normalize(target), compass[i]);
+
 		if (dot_product > max)
 		{
 			max = dot_product;
@@ -196,73 +161,131 @@ Direction VectorDirection(glm::vec2 target)
 Collision CheckCollisionAABB(BallObject &one, BallObject &two)
 {
 	//check difference between the balls'centers
-	glm::vec2 difference = one.Position - two.Position;
-
-	//if distance between centers <= 2*collision --> collision
-	if (glm::length(difference) <= (2*one.Radius))
+	//glm::vec2 difference = one.Position - two.Position;
+	glm::vec2 difference = glm::vec2(std::abs(one.Position.x - two.Position.x), std::abs(one.Position.y - two.Position.y));
+	//if distance between centers <= 2*radius --> collision
+	if (glm::length(difference) <= (2 * one.Radius)) {
 		return std::make_tuple(GL_TRUE, VectorDirection(difference), difference);
+	}
 	else
+		// No collision, return tuple with collision as false
 		return std::make_tuple(GL_FALSE, UP, glm::vec2(0, 0));
 }
 
-void DoCollisions()
+void DoCollisions(BallObject *ball1, BallObject *ball2)
 {
 	//check for collisions
 	Collision collisionTest = CheckCollisionAABB(*ball1, *ball2);
 	if (std::get<0>(collisionTest))
-	{	
+	{
 		//collision resolution
 		Direction dir = std::get<1>(collisionTest);
 		glm::vec2 diff_vec = std::get<2>(collisionTest);
+		
+		
 		if (dir == LEFT || dir == RIGHT)
 		{
+			/*//ball 1 gets velocity
+			if ((ball1->Velocity.x > 0 && ball2->Velocity.x < 0) || ((ball2->Velocity.x > 0 && ball1->Velocity.x < 0))) {
+				ball2->Velocity.x -= ball1->Velocity.x;
+			}
+			else {
+				ball2->Velocity.x += ball1->Velocity.x;
+			}
+			if ((ball1->Velocity.y > 0 && ball2->Velocity.y < 0) || ((ball2->Velocity.y > 0 && ball1->Velocity.y < 0))) {
+				ball2->Velocity.y -= ball1->Velocity.y;
+			}
+			else {
+				ball2->Velocity.y += ball1->Velocity.y;
+			}*/
 			//ball 1 gets velocity
-			ball1->Velocity.x = ball2->Velocity.x;
-			ball1->Velocity.y = ball2->Velocity.y;
+			if ((ball1->Velocity.x > 0 && ball2->Velocity.x < 0) || ((ball2->Velocity.x > 0 && ball1->Velocity.x < 0))) {
+				ball2->Velocity.x = -10.0f * deltaTime;
+			}
+			else {
+				ball2->Velocity.x = 10.0f * deltaTime;
+			}
+			if ((ball1->Velocity.y > 0 && ball2->Velocity.y < 0) || ((ball2->Velocity.y > 0 && ball1->Velocity.y < 0))) {
+				ball2->Velocity.y = -10.0f * deltaTime;
+			}
+			else {
+				ball2->Velocity.y = 10.0f * deltaTime;
+			}
+			
 			//ball2
-			ball2->Velocity.x = -ball2->Velocity.x;
-			GLfloat penetration = ball2->Radius - std::abs(diff_vec.x);
+			ball1->Velocity.x = -ball1->Velocity.x;
+			GLfloat penetration = ball1->Radius - std::abs(diff_vec.x);
 			if (dir == LEFT)
-				ball2->Position.x -= penetration;
+				ball2->Position.x -= 0.1f;
 			else
-				ball2->Position.x += penetration;
+				ball2->Position.x += 0.1f;
 		}
 		else
 		{
 			//ball 1 gets velocity
-			ball1->Velocity.x = ball2->Velocity.x;
-			ball1->Velocity.y = ball2->Velocity.y;
+			/*if ((ball1->Velocity.x > 0 && ball2->Velocity.x < 0) || ((ball2->Velocity.x > 0 && ball1->Velocity.x < 0))) {
+				ball2->Velocity.x -= ball1->Velocity.x;
+			}
+			else {
+				ball2->Velocity.x += ball1->Velocity.x;
+			}
+			if ((ball1->Velocity.y > 0 && ball2->Velocity.y < 0) || ((ball2->Velocity.y > 0 && ball1->Velocity.y < 0))) {
+				ball2->Velocity.y -= ball1->Velocity.y;
+			}
+			else {
+				ball2->Velocity.y += ball1->Velocity.y;
+			}*/
+			if ((ball1->Velocity.x > 0 && ball2->Velocity.x < 0) || ((ball2->Velocity.x > 0 && ball1->Velocity.x < 0))) {
+				ball2->Velocity.x = -10.0f * deltaTime;
+			}
+			else {
+				ball2->Velocity.x = 10.0f * deltaTime;
+			}
+			if ((ball1->Velocity.y > 0 && ball2->Velocity.y < 0) || ((ball2->Velocity.y > 0 && ball1->Velocity.y < 0))) {
+				ball2->Velocity.y = -10.0f * deltaTime;
+			}
+			else {
+				ball2->Velocity.y = 10.0f * deltaTime;
+			}
 			//ball2
-			ball2->Velocity.y = -ball2->Velocity.y;
-			GLfloat penetration = ball2->Radius - std::abs(diff_vec.y);
+			ball1->Velocity.y = -ball1->Velocity.y;
+			GLfloat penetration = ball1->Radius - std::abs(diff_vec.y);
 			if (dir == UP)
-				ball2->Position.y -= penetration;
+				ball2->Position.y -= 0.1f;
 			else
-				ball2->Position.y += penetration;
+				ball2->Position.y += 0.1f;
 		}
 
 	}
 }
 
 
-void Update(GLfloat dt,GLuint uniformModel)
+void Update(GLfloat dt, GLuint uniformModel)
 {
-	ball1->Move(dt, Width);
-
-	ball2->Move(dt, Width);
-	// Check for collisions
-	DoCollisions();
-	
+	if (!ballList.empty()) { 
+		//Check for collision with walls for each ball
+		for (int i = 0; i < ballList.size(); i++){
+			ballList[i]->Move(dt, Width);
+			for (int j = i + 1; j < ballList.size(); j++)
+				DoCollisions(ballList[i], ballList[j]);
+			}
+		// Check for collision between balls
+		/*for (int i = 0; i < ballList.size(); i++) {
+			for (int j = i + 1; j < ballList.size(); j++)
+				DoCollisions(ballList[i], ballList[j]);
+		}*/
+	}
 }
+
+
 
 int main()
 {
 	//Initialize window
-	//mainWindow = Window(800, 800);
 	mainWindow = Window(Width, Height);
 	mainWindow.Initialise();
 
-	CreatePlane();
+	Mesh floorMesh = CreatePlane();
 	CreateShaders();
 
 	//Load Textures
@@ -275,20 +298,10 @@ int main()
 	blueTexture = Texture("Textures/blue.png");
 	blueTexture.LoadTextureA();
 
+
 	//Import models from folder
-	//disk = Model();
-	//disk.LoadModel("Models/disk.obj");
 	ball = Model();
 	ball.LoadModel("Models/ball.obj");
-	glm::vec2 ballPosition = glm::vec2(0.0f, 0.0f);
-	
-	ball1 = new BallObject();
-	ball2 = new BallObject();
-	ball1->Position.x = -2;
-	ball1->Position.x = -2;
-	//ball1->Velocity.x = 1;
-	//ball1->Velocity.y = 1;
-
 
 	mainLight = DirectionalLight(
 		1.0f, 1.0f, 1.0f,  // Color
@@ -314,10 +327,10 @@ int main()
 
 		// Get + Handle User Input
 		glfwPollEvents();
-
 		//Check for input transformations
 		TranslateModels(mainWindow.getsKeys());
-		//ball1->Position.x += 2.0f;
+		mainWindow.getXChange();
+		mainWindow.getYChange();
 
 		// Clear the window
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -336,6 +349,7 @@ int main()
 		shaderList[0].SetDirectionalLight(&mainLight);
 
 		// Create Viewport
+
 		glViewport(0, 0, mainWindow.getBufferWidth(), mainWindow.getBufferHeight());
 
 		//Camera position above scene
@@ -346,25 +360,47 @@ int main()
 		glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, glm::value_ptr(orthoProjection));
 		glUniformMatrix4fv(uniformView, 1, GL_FALSE, glm::value_ptr(orthoView));
 
-
-		//Floor plane
+		//Render Floor (Plane)
 		glm::mat4 floorModelMat(1.0f);
 		glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(floorModelMat));
 		greenTexture.UseTexture();
-		meshList[0]->RenderMesh();
-		
-		//update & check for collisions
+		floorMesh.RenderMesh();
+
+		// Handle mouse clicks, need to convert points from screen space to world space
+		float aspect = 800.0f / Height;
+		glm::vec4 viewPort = glm::vec4(0.0f, 0.0f, 800.0f, 800.0f);
+		glm::mat4 projectionMatrix = orthoProjection;
+		glm::mat4 modelWorldMatrix = orthoView;
+
+		glm::vec3 screenPoint1 = glm::vec3(mainWindow.lastX, mainWindow.lastY, 1.0f);
+		//Unproject both these points
+		glm::vec3 modelPoint1 = unProject(screenPoint1, orthoView, orthoProjection, viewPort);
+		// Since ortho and looking down, will leave y == 1
+		// OpenGL and Windows have different points for 0,0, so multiple Z (y-axis in this case) by -1 to correct it
+		modelPoint1.y = 1.0f;
+		modelPoint1.z *= -1.0f;
+
+		//Ball - spawn
+		if (mainWindow.mousePressed) {
+			std::cout << "[WORLD COORDS]mouse at: " << modelPoint1.x << ", " << modelPoint1.y << ", " << modelPoint1.z << ", " << std::endl;
+			BallObject* addBall = new BallObject();
+			addBall->Position = glm::vec2(modelPoint1.x, modelPoint1.z);
+			ballList.push_back(addBall);
+			
+
+			// Need to turn off mouse pressed here because by the time it comes back to here on the next loop...
+			// ...it will have logged 3 clicks
+			mainWindow.mousePressed = !mainWindow.mousePressed;
+		}
+
+		//Check for collision
 		Update(deltaTime, uniformModel);
-		ball1->Draw(ball, uniformModel);
-		ball2->Draw(ball, uniformModel);
 
+		// Render each ball in vector of ball objects
+		for (int i = 0; i < ballList.size(); i++)
+			ballList[i]->Draw(ball, uniformModel);
 
-		//Ball
-		/*glm::mat4 ballModelMat(1.0f);
-		ballModelMat = glm::translate(ballModelMat, glm::vec3(curPositionX, 1.0f, curPositionZ));
-		glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(ballModelMat));
-		ball.RenderModel();*/
-
+		
 		glUseProgram(0);
 		mainWindow.swapBuffers();
 	}

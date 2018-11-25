@@ -22,6 +22,7 @@ Window::Window(GLint windowWidth, GLint windowHeight)
 	}
 }
 
+
 int Window::Initialise()
 {
 	if (!glfwInit())
@@ -57,7 +58,7 @@ int Window::Initialise()
 
 	// Handle Key + Mouse Input
 	createCallbacks();
-	glfwSetInputMode(mainWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetInputMode(mainWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
 	// Allow modern extension access
 	glewExperimental = GL_TRUE;
@@ -83,11 +84,13 @@ void Window::createCallbacks()
 {
 	glfwSetKeyCallback(mainWindow, handleKeys);
 	glfwSetCursorPosCallback(mainWindow, handleMouse);
+	glfwSetMouseButtonCallback(mainWindow, handleMousePress);
 }
 
 GLfloat Window::getXChange()
 {
 	GLfloat theChange = xChange;
+	
 	xChange = 0.0f;
 	return theChange;
 }
@@ -122,11 +125,12 @@ void Window::handleKeys(GLFWwindow* window, int key, int code, int action, int m
 		}
 	}
 }
+
+
 //Accounts for how far mouse moves over time, subtracts last loc from current loc
 void Window::handleMouse(GLFWwindow* window, double xPos, double yPos)
 {
 	Window* theWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
-
 	if (theWindow->mouseFirstMoved)
 	{
 		theWindow->lastX = xPos;
@@ -140,6 +144,25 @@ void Window::handleMouse(GLFWwindow* window, double xPos, double yPos)
 	theWindow->lastX = xPos;
 	theWindow->lastY = yPos;
 }
+
+//Handle if mouse pressed
+void  Window::handleMousePress(GLFWwindow* window, int button, int action, int mods) 
+{
+	Window* theWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+	{
+		std::cout << "[SCREEN] Mouse button clicked at" << theWindow->lastX  <<", " << theWindow->lastY <<std::endl;
+		theWindow->mousePressed = true;
+	}
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
+	{
+		std::cout << "[SCREEN] Mouse button released at" << theWindow->lastX << ", " << theWindow->lastY << std::endl;
+		theWindow->mousePressed = false;
+	}
+
+}
+
+
 
 Window::~Window()
 {

@@ -4,6 +4,12 @@
 #define STB_IMAGE_IMPLEMENTATION
 
 #include <stdio.h>
+#include <stdlib.h> //abs
+
+#include <iostream>
+#include <tuple>
+#include <functional>
+
 #include <string.h>
 #include <cmath>
 #include <vector>
@@ -25,6 +31,14 @@
 
 #include "Model.h"
 #include "BallObject.h"
+
+enum Direction {
+	UP,
+	RIGHT,
+	DOWN,
+	LEFT
+};
+typedef std::tuple<GLboolean, Direction, glm::vec2> Collision;
 
 const float toRadians = 3.14159265f / 180.0f;
 const GLfloat BALL_RADIUS = 1.0f;
@@ -103,10 +117,12 @@ void TranslateModels(bool* keys) {
 	if (keys[GLFW_KEY_LEFT])
 	{
 		if (ball1->Position.x >= minTranslate) {
-			ball1->Position.x -= 0.1f;
+			ball1->Position.x =(ball1->Position.x* ball1->Velocity.x)+0.1f;
+			//ball1->Position.x -= ball1->Velocity.x+0.1f;
 		}
 		else {
-			ball1->Position.x = ball1->Position.x;
+			//ball1->Position.x = ball1->Position.x;
+			ball1->Position.x += 0.1f;
 		}
 		
 	}
@@ -132,9 +148,9 @@ void TranslateModels(bool* keys) {
 	}
 	if (keys[GLFW_KEY_SPACE])
 	{
-		/*curPositionX += INITIAL_BALL_VELOCITY[0];
-		curPositionZ += INITIAL_BALL_VELOCITY[1];*/
 		ball2->Velocity.x = 0.1f;
+		ball2->Velocity.y = 0.1f;
+		//ball1->Velocity.x = -0.1f;
 	}
 
 }
@@ -155,49 +171,87 @@ void CreateShaders()
 	shaderList.push_back(*shader1);
 }
 
-GLboolean CheckCollisionAABB(BallObject &one, BallObject &two)
+Direction VectorDirection(glm::vec2 target)
 {
-	// Get center point circle first
-	glm::vec2 center1(one.Position + one.Radius);
-	// Calculate AABB info (center, half-extents)
-	//glm::vec2 aabbHalfExtents(two.Size.x / 2, two.Size.y / 2);
-	//glm::vec2 aabbCenter(two.Position + aabbHalfExtents);
-	glm::vec2 center2(two.Position + two.Radius);
-	glm::vec2 difference = center1 - center2;
-
-	glm::vec2 clamped = glm::clamp(difference, -center2, center2);
-	// Add clamped value to AABB_center and we get the value of box closest to circle
-	glm::vec2 closest = center2 + clamped;
-	difference = closest - center1;
-	if (glm::length(difference) <= one.Radius)
+	glm::vec2 compass[] = {
+		glm::vec2(0.0f, 1.0f),	// up
+		glm::vec2(1.0f, 0.0f),	// right
+		glm::vec2(0.0f, -1.0f),	// down
+		glm::vec2(-1.0f, 0.0f)	// left
+	};
+	GLfloat max = 0.0f;
+	GLuint best_match = -1;
+	for (GLuint i = 0; i < 4; i++)
 	{
-		//return std::make_tuple(GL_TRUE, VectorDirection(difference), difference);
-		two.Size *= 2;
-		//two.Position.x += 0.2f;
+		GLfloat dot_product = glm::dot(glm::normalize(target), compass[i]);
+		if (dot_product > max)
+		{
+			max = dot_product;
+			best_match = i;
+		}
 	}
-	else
-		return false;
+	return (Direction)best_match;
+}
 
-	//return false;
+Collision CheckCollisionAABB(BallObject &one, BallObject &two)
+{
+	//check difference between the balls'centers
+	glm::vec2 difference = one.Position - two.Position;
+
+	//if distance between centers <= 2*collision --> collision
+	if (glm::length(difference) <= (2*one.Radius))
+		return std::make_tuple(GL_TRUE, VectorDirection(difference), difference);
+	else
+		return std::make_tuple(GL_FALSE, UP, glm::vec2(0, 0));
 }
 
 void DoCollisions()
 {
 	//check for collisions
-	collisionTest = CheckCollisionAABB(*ball1, *ball2);
+	Collision collisionTest = CheckCollisionAABB(*ball1, *ball2);
+	if (std::get<0>(collisionTest))
+	{	
+		//collision resolution
+		Direction dir = std::get<1>(collisionTest);
+		glm::vec2 diff_vec = std::get<2>(collisionTest);
+		if (dir == LEFT || dir == RIGHT)
+		{
+			//ball 1 gets velocity
+			ball1->Velocity.x = ball2->Velocity.x;
+			ball1->Velocity.y = ball2->Velocity.y;
+			//ball2
+			ball2->Velocity.x = -ball2->Velocity.x;
+			GLfloat penetration = ball2->Radius - std::abs(diff_vec.x);
+			if (dir == LEFT)
+				ball2->Position.x -= penetration;
+			else
+				ball2->Position.x += penetration;
+		}
+		else
+		{
+			//ball 1 gets velocity
+			ball1->Velocity.x = ball2->Velocity.x;
+			ball1->Velocity.y = ball2->Velocity.y;
+			//ball2
+			ball2->Velocity.y = -ball2->Velocity.y;
+			GLfloat penetration = ball2->Radius - std::abs(diff_vec.y);
+			if (dir == UP)
+				ball2->Position.y -= penetration;
+			else
+				ball2->Position.y += penetration;
+		}
+
+	}
 }
 
 
 void Update(GLfloat dt,GLuint uniformModel)
 {
+	ball1->Move(dt, Width);
+
 	ball2->Move(dt, Width);
-	//ball1->Draw(ball, uniformModel);
-	//ball2->Draw(ball, uniformModel);
 	// Check for collisions
-	//DoCollisions();
-	//ball1->Position.x = 3.0f;
-	//ball1->Draw(ball, uniformModel);
-	//ball2->Draw(ball, uniformModel);
+	DoCollisions();
 	
 }
 
@@ -227,9 +281,13 @@ int main()
 	ball = Model();
 	ball.LoadModel("Models/ball.obj");
 	glm::vec2 ballPosition = glm::vec2(0.0f, 0.0f);
-	//ball1 = new BallObject(ballPosition, glm::vec2(1,1), glm::vec3(1,1,1));
+	
 	ball1 = new BallObject();
 	ball2 = new BallObject();
+	ball1->Position.x = -2;
+	ball1->Position.x = -2;
+	//ball1->Velocity.x = 1;
+	//ball1->Velocity.y = 1;
 
 
 	mainLight = DirectionalLight(
@@ -296,7 +354,6 @@ int main()
 		meshList[0]->RenderMesh();
 		
 		//update & check for collisions
-		//ball2->Position += ball2->Velocity;
 		Update(deltaTime, uniformModel);
 		ball1->Draw(ball, uniformModel);
 		ball2->Draw(ball, uniformModel);

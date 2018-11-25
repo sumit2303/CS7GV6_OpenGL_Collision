@@ -7,6 +7,9 @@
 #include "Model.h"
 #include "texture.h"
 #include "Shader.h"
+
+const float maxWidth = 10.0f;
+
 class BallObject
 {
 

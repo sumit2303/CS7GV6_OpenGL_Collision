@@ -21,20 +21,25 @@ glm::vec2 BallObject::Move(GLfloat dt, GLuint window_width)
 {
 		// Move the balll
 		this->Position += this->Velocity * dt;
-		if (this->Position.x <= 0)
+		if (this->Position.x - this->Size.x<= -maxWidth)
 		{
 			this->Velocity.x = -this->Velocity.x;
-			this->Position.x = 0.0f;
+			this->Position.x = -maxWidth + this->Size.x;
 		}
-		else if (this->Position.x + this->Size.x >= window_width)
+		else if (this->Position.x + this->Size.x >= maxWidth)
 		{
 			this->Velocity.x = -this->Velocity.x;
-			this->Position.x = window_width - this->Size.x;
+			this->Position.x = maxWidth - this->Size.x;
 		}
-		if (this->Position.y <= 0)
+		if (this->Position.y - this->Size.y <= -maxWidth)
 		{
 			this->Velocity.y = -this->Velocity.y;
-			this->Position.y = 0.0f;
+			this->Position.y = -maxWidth + this->Size.y;
+		}
+		else if (this->Position.y + this->Size.y >= maxWidth)
+		{
+			this->Velocity.y = -this->Velocity.y;
+			this->Position.y = maxWidth - this->Size.y;
 		}
 	this->Position += this->Velocity;
 	

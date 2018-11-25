@@ -1,3 +1,6 @@
 ﻿  main.cpp
-c:\users\cjmcm\documents\visual studio\projects\computer graphics labs\group\collision\collision\main.cpp(114): warning C4244: 'initializing': conversion from 'double' to 'GLfloat', possible loss of data
-  collision.vcxproj -> C:\Users\cjmcm\Documents\Visual Studio\Projects\Computer Graphics Labs\group\collision\Debug\collision.exe
+d:\users\cjmcm\working files\github\collision project\cs7gv6_opengl_collision\collision\collision\main.cpp(267): warning C4018: '<': signed/unsigned mismatch
+d:\users\cjmcm\working files\github\collision project\cs7gv6_opengl_collision\collision\collision\main.cpp(269): warning C4018: '<': signed/unsigned mismatch
+d:\users\cjmcm\working files\github\collision project\cs7gv6_opengl_collision\collision\collision\main.cpp(324): warning C4244: 'initializing': conversion from 'double' to 'GLfloat', possible loss of data
+d:\users\cjmcm\working files\github\collision project\cs7gv6_opengl_collision\collision\collision\main.cpp(400): warning C4018: '<': signed/unsigned mismatch
+  collision.vcxproj -> D:\Users\Cjmcm\Working Files\GitHub\Collision Project\CS7GV6_OpenGL_Collision\collision\Debug\collision.exe

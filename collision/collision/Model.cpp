@@ -84,7 +84,7 @@ void Model::LoadMesh(aiMesh * mesh, const aiScene * scene)
 void Model::LoadMaterials(const aiScene * scene)
 {
 	textureList.resize(scene->mNumMaterials);
-	
+
 	for (size_t i = 0; i < scene->mNumMaterials; i++)
 	{
 		aiMaterial* material = scene->mMaterials[i];

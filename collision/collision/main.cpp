@@ -40,9 +40,6 @@ std::vector<BallObject*> ballList;
 std::vector <glm::mat4> modelMatrices;
 
 Texture greenTexture;
-Texture redTexture;
-Texture whiteTexture;
-Texture blueTexture;
 
 Model ball;
 
@@ -50,9 +47,8 @@ DirectionalLight mainLight;
 
 GLfloat deltaTime = 0.0f;
 GLfloat lastTime = 0.0f;
-GLfloat rotationStep = 40.0f;
+GLfloat rotationStep = 100.0f;
 GLfloat maxRotate = 360.0f;
-bool rotationOn = false;
 GLboolean collisionTest;
 
 // Initial velocity of the Ball
@@ -100,8 +96,6 @@ void TranslateModels(bool* keys) {
 		if (!ballList.empty()) {
 			ballList[0]->Velocity.x = 10.0f * deltaTime;
 			ballList[0]->Velocity.y = 10.0f * deltaTime;
-			std::cout << "Rotation on" << std::endl;
-			rotationOn = !rotationOn;
 			/*for (int i = 0; i < ballList.size(); i++) {
 				ballList[i]->Velocity.x = 10.0f * deltaTime;
 				ballList[i]->Velocity.y = 10.0f * deltaTime;
@@ -111,15 +105,6 @@ void TranslateModels(bool* keys) {
 
 }
 
-// Can delete maybe
-bool toggleTex() {
-	if (curPositionX >= 0.0f) {
-		return true;
-	}
-	else {
-		return false;
-	}
-}
 
 void CreateShaders()
 {
@@ -150,7 +135,6 @@ void DoCollisions(BallObject *ball1, BallObject *ball2)
 	if (collisionTest)
 	{
 		//collision resolution
-			
 		glm::vec2 normalBall1 = glm::vec2(ball1->Position.x - ball2->Position.x, ball1->Position.y - ball2->Position.y);
 		glm::vec2 newVelocity = glm::vec2(ball1->Velocity.x + normalBall1.x, ball1->Velocity.y + normalBall1.y);
 		ball1->Velocity = newVelocity;
@@ -162,6 +146,8 @@ void DoCollisions(BallObject *ball1, BallObject *ball2)
 		//decrease velocity
 		ball1->Velocity /= 10.0f;
 		ball2->Velocity /= 10.0f;
+		ball1->rotationOn = true;
+		ball2->rotationOn = true;
 	}
 }
 
@@ -172,6 +158,12 @@ void Update(GLfloat dt, GLuint uniformModel)
 		//Check for collision with walls for each ball
 		for (int i = 0; i < ballList.size(); i++){
 			ballList[i]->Move(dt, Width);
+			if(ballList[i]->rotationOn == true){
+				ballList[i]->Rotation += rotationStep * deltaTime;
+					if (ballList[i]->Rotation > maxRotate) {
+						ballList[i]->Rotation = 0.0f;
+					}
+			}
 			for (int j = i + 1; j < ballList.size(); j++)
 				DoCollisions(ballList[i], ballList[j]);
 			}
@@ -197,13 +189,6 @@ int main()
 	//Load Textures
 	greenTexture = Texture("Textures/green.png");
 	greenTexture.LoadTextureA();
-	redTexture = Texture("Textures/red.png");
-	redTexture.LoadTextureA();
-	whiteTexture = Texture("Textures/plain.png");
-	whiteTexture.LoadTextureA();
-	blueTexture = Texture("Textures/blue.png");
-	blueTexture.LoadTextureA();
-
 
 	//Import models from folder
 	ball = Model();
@@ -303,19 +288,7 @@ int main()
 
 		//Check for collision
 		Update(deltaTime, uniformModel);
-
-
-		std::cout << "Rotation on starting increment" << std::endl;
-		if (!ballList.empty()) {
-			ballList[0]->Rotation += rotationStep * deltaTime;
-			std::cout << "Rotation: " << ballList[0]->Rotation << std::endl;
-
-			if (ballList[0]->Rotation > maxRotate) {
-				ballList[0]->Rotation = 0.0f;
-			}
-		}
 		
-
 		// Render each ball in vector of ball objects
 		for (int i = 0; i < ballList.size(); i++)
 			ballList[i]->Draw(ball, uniformModel);

@@ -1,8 +1,8 @@
 # Blender MTL File: 'None'
-# Material Count: 2
+# Material Count: 1
 
 newmtl Beach_Ball_rubber
-Ns 25.490196
+Ns 23.529412
 Ka 1.000000 1.000000 1.000000
 Kd 1.000000 1.000000 1.000000
 Ks 0.567000 0.567000 0.567000
@@ -12,13 +12,3 @@ d 1.000000
 illum 2
 map_Kd Beach_Ball_diffuse.jpg
 map_Ka Beach_Ball_diffuse.jpg
-
-newmtl Beach_Ball_transparent_plastic
-Ns 29.411765
-Ka 1.000000 1.000000 1.000000
-Kd 1.000000 1.000000 1.000000
-Ks 0.432000 0.432000 0.432000
-Ke 0.000000 0.000000 0.000000
-Ni 1.500000
-d 0.600000
-illum 2

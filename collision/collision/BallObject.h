@@ -18,7 +18,7 @@ public:
 	glm::vec3 Color;
 	GLfloat Radius;
 	GLfloat Rotation;
-
+	bool rotationOn = false;
 
 	BallObject();
 	BallObject(glm::vec2 pos, glm::vec2 size,/* Texture2D sprite,*/

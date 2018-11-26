@@ -93,15 +93,11 @@ void TranslateModels(bool* keys) {
 	if (keys[GLFW_KEY_SPACE])
 
 	{
+		//Give the first ball initialized a velocity and rotation
 		if (!ballList.empty()) {
 			ballList[0]->Velocity.x = 10.0f * deltaTime;
 			ballList[0]->Velocity.y = 10.0f * deltaTime;
-			//ballList[0]->rotationOn = true;
-			invertRot = !invertRot;
-			/*for (int i = 0; i < ballList.size(); i++) {
-				ballList[i]->Velocity.x = 10.0f * deltaTime;
-				ballList[i]->Velocity.y = 10.0f * deltaTime;
-			}*/
+			ballList[0]->rotationOn = true;
 		}
 	}
 

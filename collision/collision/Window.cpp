@@ -151,12 +151,12 @@ void  Window::handleMousePress(GLFWwindow* window, int button, int action, int m
 	Window* theWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
 	{
-		std::cout << "[SCREEN] Mouse button clicked at" << theWindow->lastX  <<", " << theWindow->lastY <<std::endl;
+		//std::cout << "[SCREEN] Mouse button clicked at" << theWindow->lastX  <<", " << theWindow->lastY <<std::endl;
 		theWindow->mousePressed = true;
 	}
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
 	{
-		std::cout << "[SCREEN] Mouse button released at" << theWindow->lastX << ", " << theWindow->lastY << std::endl;
+		//std::cout << "[SCREEN] Mouse button released at" << theWindow->lastX << ", " << theWindow->lastY << std::endl;
 		theWindow->mousePressed = false;
 	}
 

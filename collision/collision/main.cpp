@@ -96,6 +96,8 @@ void TranslateModels(bool* keys) {
 		if (!ballList.empty()) {
 			ballList[0]->Velocity.x = 10.0f * deltaTime;
 			ballList[0]->Velocity.y = 10.0f * deltaTime;
+			//ballList[0]->rotationOn = true;
+			invertRot = !invertRot;
 			/*for (int i = 0; i < ballList.size(); i++) {
 				ballList[i]->Velocity.x = 10.0f * deltaTime;
 				ballList[i]->Velocity.y = 10.0f * deltaTime;
@@ -154,24 +156,23 @@ void DoCollisions(BallObject *ball1, BallObject *ball2)
 
 void Update(GLfloat dt, GLuint uniformModel)
 {
-	if (!ballList.empty()) { 
+	if (!ballList.empty()) {
 		//Check for collision with walls for each ball
-		for (int i = 0; i < ballList.size(); i++){
+		for (int i = 0; i < ballList.size(); i++) {
 			ballList[i]->Move(dt, Width);
-			if(ballList[i]->rotationOn == true){
+			//Check for collision between balls
+			for (int j = i + 1; j < ballList.size(); j++) {
+				DoCollisions(ballList[i], ballList[j]);
+			}
+			// Handle rotation for each ball
+			if (ballList[i]->rotationOn == true) {
+				//if (invertRot == false) {
 				ballList[i]->Rotation += rotationStep * deltaTime;
-					if (ballList[i]->Rotation > maxRotate) {
-						ballList[i]->Rotation = 0.0f;
-					}
+				if (ballList[i]->Rotation > maxRotate) {
+					ballList[i]->Rotation = 0.0f;
+				}
 			}
-			for (int j = i + 1; j < ballList.size(); j++)
-				DoCollisions(ballList[i], ballList[j]);
-			}
-		// Check for collision between balls
-		/*for (int i = 0; i < ballList.size(); i++) {
-			for (int j = i + 1; j < ballList.size(); j++)
-				DoCollisions(ballList[i], ballList[j]);
-		}*/
+		}
 	}
 }
 
@@ -273,17 +274,15 @@ int main()
 
 		//Ball - spawn
 		if (mainWindow.mousePressed) {
-			std::cout << "[WORLD COORDS]mouse at: " << modelPoint1.x << ", " << modelPoint1.y << ", " << modelPoint1.z << ", " << std::endl;
+			//std::cout << "[WORLD COORDS]mouse at: " << modelPoint1.x << ", " << modelPoint1.y << ", " << modelPoint1.z << ", " << std::endl;
 			BallObject* addBall = new BallObject();
 			addBall->Position = glm::vec2(modelPoint1.x, modelPoint1.z);
 			ballList.push_back(addBall);
 			
-
 			// Need to turn off mouse pressed here because by the time it comes back to here on the next loop...
 			// ...it will have logged 3 clicks
 			mainWindow.mousePressed = !mainWindow.mousePressed;
 		}
-
 		
 
 		//Check for collision

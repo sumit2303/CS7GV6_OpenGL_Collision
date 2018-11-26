@@ -50,7 +50,9 @@ DirectionalLight mainLight;
 
 GLfloat deltaTime = 0.0f;
 GLfloat lastTime = 0.0f;
-
+GLfloat rotationStep = 40.0f;
+GLfloat maxRotate = 360.0f;
+bool rotationOn = false;
 GLboolean collisionTest;
 
 // Initial velocity of the Ball
@@ -98,6 +100,8 @@ void TranslateModels(bool* keys) {
 		if (!ballList.empty()) {
 			ballList[0]->Velocity.x = 10.0f * deltaTime;
 			ballList[0]->Velocity.y = 10.0f * deltaTime;
+			std::cout << "Rotation on" << std::endl;
+			rotationOn = !rotationOn;
 			/*for (int i = 0; i < ballList.size(); i++) {
 				ballList[i]->Velocity.x = 10.0f * deltaTime;
 				ballList[i]->Velocity.y = 10.0f * deltaTime;
@@ -295,8 +299,22 @@ int main()
 			mainWindow.mousePressed = !mainWindow.mousePressed;
 		}
 
+		
+
 		//Check for collision
 		Update(deltaTime, uniformModel);
+
+
+		std::cout << "Rotation on starting increment" << std::endl;
+		if (!ballList.empty()) {
+			ballList[0]->Rotation += rotationStep * deltaTime;
+			std::cout << "Rotation: " << ballList[0]->Rotation << std::endl;
+
+			if (ballList[0]->Rotation > maxRotate) {
+				ballList[0]->Rotation = 0.0f;
+			}
+		}
+		
 
 		// Render each ball in vector of ball objects
 		for (int i = 0; i < ballList.size(); i++)

@@ -69,6 +69,8 @@ static const char* vShader = "Shaders/vShader.txt";
 // Fragment Shader
 static const char* fShader = "Shaders/fShader.txt";
 
+bool gravity_enabled = false;
+
 //Create floor plane (other objects not used)
 Mesh CreatePlane()
 {
@@ -91,7 +93,6 @@ Mesh CreatePlane()
 
 void TranslateModels(bool* keys) {
 	if (keys[GLFW_KEY_SPACE])
-
 	{
 		//Give the first ball initialized a velocity and rotation
 		if (!ballList.empty()) {
@@ -99,6 +100,9 @@ void TranslateModels(bool* keys) {
 			ballList[0]->Velocity.y = 10.0f * deltaTime;
 			ballList[0]->rotationOn = true;
 		}
+	}
+	if (keys[GLFW_KEY_G]) {
+		gravity_enabled = !gravity_enabled;
 	}
 
 }
@@ -142,11 +146,13 @@ void DoCollisions(BallObject *ball1, BallObject *ball2)
 		ball2->Velocity = newVelocity;
 
 		//decrease velocity
+		
 		ball1->Velocity /= 10.0f;
 		ball2->Velocity /= 10.0f;
 		ball1->rotationOn = true;
 		ball2->rotationOn = true;
 	}
+
 }
 
 
@@ -155,23 +161,26 @@ void Update(GLfloat dt, GLuint uniformModel)
 	if (!ballList.empty()) {
 		//Check for collision with walls for each ball
 		for (int i = 0; i < ballList.size(); i++) {
+			
 			ballList[i]->Move(dt, Width);
+			if(gravity_enabled==true)
+				ballList[i]->Gravity(dt, Width);
 			//Check for collision between balls
 			for (int j = i + 1; j < ballList.size(); j++) {
 				DoCollisions(ballList[i], ballList[j]);
 			}
 			// Handle rotation for each ball
 			if (ballList[i]->rotationOn == true) {
-				//if (invertRot == false) {
 				ballList[i]->Rotation += rotationStep * deltaTime;
 				if (ballList[i]->Rotation > maxRotate) {
 					ballList[i]->Rotation = 0.0f;
 				}
 			}
 		}
+
+
 	}
 }
-
 
 
 int main()
@@ -183,8 +192,8 @@ int main()
 	Mesh floorMesh = CreatePlane();
 	CreateShaders();
 
-	//Load Textures
-	greenTexture = Texture("Textures/green.png");
+	//Load Texturess
+	greenTexture = Texture("Textures/sand.png");
 	greenTexture.LoadTextureA();
 
 	//Import models from folder
@@ -193,7 +202,7 @@ int main()
 
 	mainLight = DirectionalLight(
 		1.0f, 1.0f, 1.0f,  // Color
-		0.6f, 0.6f, //ambient intensity
+		0.8f, 0.8f, //ambient intensity
 		0.0f, 0.0f, -1.0f); // Direction
 
 //Default initialize shader uniform variables

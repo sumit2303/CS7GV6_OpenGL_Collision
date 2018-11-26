@@ -9,30 +9,19 @@
 const float toRadians = 3.14159265f / 180.0f;
 
 BallObject::BallObject()
-	:Position(0.0f, 0.0f), Radius(1.0f), Size(glm::vec2(1, 1)), Velocity(0.0f), Color(1.0f),
+	:Position(0.0f, 0.0f), Radius(1.0f), Size(glm::vec2(1, 1)), Velocity(0.0f),
 	Rotation(0.0f)
 {
 }
 
 BallObject::BallObject(glm::vec2 pos, glm::vec2 size, /*Texture2D sprite,*/ glm::vec3 color, glm::vec2 velocity)
-	: Position(pos), Size(size), Velocity(velocity), Color(color),
+	: Position(pos), Size(size), Velocity(velocity),
 	Rotation(0.0f)
 {
 }
 
 glm::vec2 BallObject::Move(GLfloat dt, GLuint window_width)
 {
-	// Move the balll
-	/*if(this->Velocity.x > 0.01f)
-		this->Velocity.x = 0.01f;
-	if (this->Velocity.x < -0.01f)
-		this->Velocity.x = -0.01f;
-	if (this->Velocity.y > 0.01f)
-		this->Velocity.y = 0.01f;
-	if (this->Velocity.y < -0.01f)
-		this->Velocity.y = -0.01f;
-		*/
-	
 	this->Position += this->Velocity * dt;
 	if (this->Position.x - this->Size.x <= -maxWidth)
 	{
@@ -55,6 +44,16 @@ glm::vec2 BallObject::Move(GLfloat dt, GLuint window_width)
 		this->Position.y = maxWidth - this->Size.y;
 	}
 	this->Position += this->Velocity;
+
+	return this->Position;
+}
+
+glm::vec2 BallObject::Gravity(GLfloat dt, GLuint window_width)
+{
+
+	this->Position += this->Velocity * dt;
+	this->Velocity += glm::vec2(0, 2) * dt;
+	this->Position += this->Velocity * dt;
 
 	return this->Position;
 }

@@ -66,7 +66,7 @@ void BallObject::Draw(Model ball, GLuint uniformModel)
 	if (rotationOn) {
 		ballModelMat = glm::rotate(ballModelMat, toRadians * Rotation, glm::vec3(1.0f, 0.0f, 0.0f));
 	}
-	ballModelMat = glm::rotate(ballModelMat, toRadians * 90.0f, glm::vec3(0.0f,1.0f, 0.0f));
+	ballModelMat = glm::rotate(ballModelMat, toRadians * 90.0f, glm::vec3(1.0f,0.0f, 1.0f));
 	glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(ballModelMat));
 	ball.RenderModel();
 }

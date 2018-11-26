@@ -10,8 +10,6 @@
 #include <cmath>
 #include <vector>
 #include <iostream>
-#include <tuple>
-#include <functional>
 
 #include <GL\glew.h>
 #include <GLFW\glfw3.h>
@@ -30,16 +28,7 @@
 #include "BallObject.h"
 #include "Model.h"
 
-enum Direction {
-	UP,
-	RIGHT,
-	DOWN,
-	LEFT
-};
-typedef std::tuple<GLboolean, Direction, glm::vec2> Collision;
-
 const float toRadians = 3.14159265f / 180.0f;
-const GLfloat BALL_RADIUS = 1.0f;
 
 Window mainWindow;
 //window size
@@ -135,127 +124,40 @@ void CreateShaders()
 	shaderList.push_back(*shader1);
 }
 
-Direction VectorDirection(glm::vec2 target)
-{
-	glm::vec2 compass[] = {
-		glm::vec2(0.0f, 1.0f),	// up
-		glm::vec2(1.0f, 0.0f),	// right
-		glm::vec2(0.0f, -1.0f),	// down
-		glm::vec2(-1.0f, 0.0f)	// left
-	};
-	GLfloat max = 0.0f;
-	GLuint best_match = -1;
-	for (GLuint i = 0; i < 4; i++)
-	{
-		GLfloat dot_product = glm::dot(glm::normalize(target), compass[i]);
 
-		if (dot_product > max)
-		{
-			max = dot_product;
-			best_match = i;
-		}
-	}
-	return (Direction)best_match;
-}
-
-Collision CheckCollisionAABB(BallObject &one, BallObject &two)
+GLchar CheckCollisionAABB(BallObject &one, BallObject &two)
 {
 	//check difference between the balls'centers
 	//glm::vec2 difference = one.Position - two.Position;
 	glm::vec2 difference = glm::vec2(std::abs(one.Position.x - two.Position.x), std::abs(one.Position.y - two.Position.y));
 	//if distance between centers <= 2*radius --> collision
 	if (glm::length(difference) <= (2 * one.Radius)) {
-		return std::make_tuple(GL_TRUE, VectorDirection(difference), difference);
+		return GL_TRUE;
 	}
 	else
 		// No collision, return tuple with collision as false
-		return std::make_tuple(GL_FALSE, UP, glm::vec2(0, 0));
+		return GL_FALSE;
 }
 
 void DoCollisions(BallObject *ball1, BallObject *ball2)
 {
 	//check for collisions
-	Collision collisionTest = CheckCollisionAABB(*ball1, *ball2);
-	if (std::get<0>(collisionTest))
+	GLchar collisionTest = CheckCollisionAABB(*ball1, *ball2);
+	if (collisionTest)
 	{
 		//collision resolution
-		Direction dir = std::get<1>(collisionTest);
-		glm::vec2 diff_vec = std::get<2>(collisionTest);
-		
-		
-		if (dir == LEFT || dir == RIGHT)
-		{
-			/*//ball 1 gets velocity
-			if ((ball1->Velocity.x > 0 && ball2->Velocity.x < 0) || ((ball2->Velocity.x > 0 && ball1->Velocity.x < 0))) {
-				ball2->Velocity.x -= ball1->Velocity.x;
-			}
-			else {
-				ball2->Velocity.x += ball1->Velocity.x;
-			}
-			if ((ball1->Velocity.y > 0 && ball2->Velocity.y < 0) || ((ball2->Velocity.y > 0 && ball1->Velocity.y < 0))) {
-				ball2->Velocity.y -= ball1->Velocity.y;
-			}
-			else {
-				ball2->Velocity.y += ball1->Velocity.y;
-			}*/
-			//ball 1 gets velocity
-			if ((ball1->Velocity.x > 0 && ball2->Velocity.x < 0) || ((ball2->Velocity.x > 0 && ball1->Velocity.x < 0))) {
-				ball2->Velocity.x = -10.0f * deltaTime;
-			}
-			else {
-				ball2->Velocity.x = 10.0f * deltaTime;
-			}
-			if ((ball1->Velocity.y > 0 && ball2->Velocity.y < 0) || ((ball2->Velocity.y > 0 && ball1->Velocity.y < 0))) {
-				ball2->Velocity.y = -10.0f * deltaTime;
-			}
-			else {
-				ball2->Velocity.y = 10.0f * deltaTime;
-			}
 			
-			//ball2
-			ball1->Velocity.x = -ball1->Velocity.x;
-			GLfloat penetration = ball1->Radius - std::abs(diff_vec.x);
-			if (dir == LEFT)
-				ball2->Position.x -= 0.1f;
-			else
-				ball2->Position.x += 0.1f;
-		}
-		else
-		{
-			//ball 1 gets velocity
-			/*if ((ball1->Velocity.x > 0 && ball2->Velocity.x < 0) || ((ball2->Velocity.x > 0 && ball1->Velocity.x < 0))) {
-				ball2->Velocity.x -= ball1->Velocity.x;
-			}
-			else {
-				ball2->Velocity.x += ball1->Velocity.x;
-			}
-			if ((ball1->Velocity.y > 0 && ball2->Velocity.y < 0) || ((ball2->Velocity.y > 0 && ball1->Velocity.y < 0))) {
-				ball2->Velocity.y -= ball1->Velocity.y;
-			}
-			else {
-				ball2->Velocity.y += ball1->Velocity.y;
-			}*/
-			if ((ball1->Velocity.x > 0 && ball2->Velocity.x < 0) || ((ball2->Velocity.x > 0 && ball1->Velocity.x < 0))) {
-				ball2->Velocity.x = -10.0f * deltaTime;
-			}
-			else {
-				ball2->Velocity.x = 10.0f * deltaTime;
-			}
-			if ((ball1->Velocity.y > 0 && ball2->Velocity.y < 0) || ((ball2->Velocity.y > 0 && ball1->Velocity.y < 0))) {
-				ball2->Velocity.y = -10.0f * deltaTime;
-			}
-			else {
-				ball2->Velocity.y = 10.0f * deltaTime;
-			}
-			//ball2
-			ball1->Velocity.y = -ball1->Velocity.y;
-			GLfloat penetration = ball1->Radius - std::abs(diff_vec.y);
-			if (dir == UP)
-				ball2->Position.y -= 0.1f;
-			else
-				ball2->Position.y += 0.1f;
-		}
+		glm::vec2 normalBall1 = glm::vec2(ball1->Position.x - ball2->Position.x, ball1->Position.y - ball2->Position.y);
+		glm::vec2 newVelocity = glm::vec2(ball1->Velocity.x + normalBall1.x, ball1->Velocity.y + normalBall1.y);
+		ball1->Velocity = newVelocity;
+	
+		glm::vec2 normalBall2 = glm::vec2(ball2->Position.x - ball1->Position.x, ball2->Position.y - ball1->Position.y);
+		newVelocity = glm::vec2(ball2->Velocity.x + normalBall2.x, ball2->Velocity.y + normalBall2.y);
+		ball2->Velocity = newVelocity;
 
+		//decrease velocity
+		ball1->Velocity /= 10.0f;
+		ball2->Velocity /= 10.0f;
 	}
 }
 
